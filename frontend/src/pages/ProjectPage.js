@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Users, Filter } from 'lucide-react';
 import { projectAPI, taskAPI } from '../services/api';
@@ -260,7 +260,7 @@ const ProjectPage = () => {
     setFilteredTasks(filtered);
   }, [tasks, statusFilter]);
 
-  const loadProject = async () => {
+  const loadProject = useCallback(async () => {
     try {
       const response = await projectAPI.getById(projectId);
       const projectData = response.data.data;
@@ -287,9 +287,9 @@ const ProjectPage = () => {
       toast.error('Failed to load project');
       console.error('Load project error:', error);
     }
-  };
+  }, [projectId]);
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       const response = await taskAPI.getByProject(projectId);
       setTasks(response.data.data.tasks);
@@ -299,7 +299,7 @@ const ProjectPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
 
   const handleTaskUpdate = (updatedTask) => {
     setTasks(prev => prev.map(task => 

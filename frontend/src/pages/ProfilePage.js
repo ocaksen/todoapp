@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { User, Mail, Calendar, Save } from 'lucide-react';
 import { userAPI } from '../services/api';
@@ -15,6 +15,17 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
 
+  const loadStats = useCallback(async () => {
+    try {
+      const response = await userAPI.getStats(user.id);
+      setStats(response.data.data.stats);
+    } catch (error) {
+      console.error('Load stats error:', error);
+    } finally {
+      setIsStatsLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -24,17 +35,6 @@ const ProfilePage = () => {
       loadStats();
     }
   }, [user, loadStats]);
-
-  const loadStats = async () => {
-    try {
-      const response = await userAPI.getStats(user.id);
-      setStats(response.data.data.stats);
-    } catch (error) {
-      console.error('Load stats error:', error);
-    } finally {
-      setIsStatsLoading(false);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

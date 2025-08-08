@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Users, Settings, Activity, Shield, Eye, Trash2, UserX, KeyRound } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -24,17 +24,7 @@ const AdminDashboard = () => {
   console.log('Is admin:', isAdmin);
   console.log('Is super admin:', isSuperAdmin);
 
-  useEffect(() => {
-    if (!isAdmin) {
-      console.log('User is not admin, not loading data');
-      return;
-    }
-    
-    console.log('Loading admin data for tab:', activeTab);
-    loadData();
-  }, [activeTab, isAdmin, loadData]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
       switch (activeTab) {
@@ -55,7 +45,17 @@ const AdminDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      console.log('User is not admin, not loading data');
+      return;
+    }
+    
+    console.log('Loading admin data for tab:', activeTab);
+    loadData();
+  }, [activeTab, isAdmin, loadData]);
 
   const loadUsers = async () => {
     try {
