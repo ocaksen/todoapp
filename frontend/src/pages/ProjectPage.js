@@ -209,6 +209,47 @@ const ProjectPage = () => {
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
+  const loadProject = useCallback(async () => {
+    try {
+      const response = await projectAPI.getById(projectId);
+      const projectData = response.data.data;
+      setProject(projectData);
+      
+      // Combine project owner and members for assignment
+      const allMembers = [...(projectData.members || [])];
+      
+      // Add project owner if not already in members
+      const owner = {
+        id: projectData.project.owner_id,
+        user_id: projectData.project.owner_id,
+        name: projectData.project.owner_name,
+        email: projectData.project.owner_email,
+        role: 'owner'
+      };
+      
+      if (!allMembers.find(member => member.user_id === owner.id)) {
+        allMembers.push(owner);
+      }
+      
+      setProjectMembers(allMembers);
+    } catch (error) {
+      toast.error('Failed to load project');
+      console.error('Load project error:', error);
+    }
+  }, [projectId]);
+
+  const loadTasks = useCallback(async () => {
+    try {
+      const response = await taskAPI.getByProject(projectId);
+      setTasks(response.data.data.tasks);
+    } catch (error) {
+      toast.error('Failed to load tasks');
+      console.error('Load tasks error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId]);
+
   useEffect(() => {
     loadProject();
     loadTasks();
@@ -259,47 +300,6 @@ const ProjectPage = () => {
       : tasks.filter(task => task.status === statusFilter);
     setFilteredTasks(filtered);
   }, [tasks, statusFilter]);
-
-  const loadProject = useCallback(async () => {
-    try {
-      const response = await projectAPI.getById(projectId);
-      const projectData = response.data.data;
-      setProject(projectData);
-      
-      // Combine project owner and members for assignment
-      const allMembers = [...(projectData.members || [])];
-      
-      // Add project owner if not already in members
-      const owner = {
-        id: projectData.project.owner_id,
-        user_id: projectData.project.owner_id,
-        name: projectData.project.owner_name,
-        email: projectData.project.owner_email,
-        role: 'owner'
-      };
-      
-      if (!allMembers.find(member => member.user_id === owner.id)) {
-        allMembers.push(owner);
-      }
-      
-      setProjectMembers(allMembers);
-    } catch (error) {
-      toast.error('Failed to load project');
-      console.error('Load project error:', error);
-    }
-  }, [projectId]);
-
-  const loadTasks = useCallback(async () => {
-    try {
-      const response = await taskAPI.getByProject(projectId);
-      setTasks(response.data.data.tasks);
-    } catch (error) {
-      toast.error('Failed to load tasks');
-      console.error('Load tasks error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [projectId]);
 
   const handleTaskUpdate = (updatedTask) => {
     setTasks(prev => prev.map(task => 
