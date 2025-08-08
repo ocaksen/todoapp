@@ -123,12 +123,55 @@ const createSampleUsers = async () => {
   }
 };
 
+const createSampleProjects = async () => {
+  const db = getConnection();
+  
+  // Get John (admin) user ID as project owner
+  const [users] = await db.execute('SELECT id FROM users WHERE email = ?', ['john@example.com']);
+  if (users.length === 0) return;
+  
+  const johnId = users[0].id;
+  
+  const sampleProjects = [
+    { name: 'Genel Görevler', description: 'Günlük ve genel işler için proje', owner_id: johnId },
+    { name: 'Ekip Çalışmaları', description: 'Takım halinde yapılacak görevler', owner_id: johnId },
+    { name: 'Kişisel Gelişim', description: 'Bireysel öğrenme ve gelişim görevleri', owner_id: johnId }
+  ];
+  
+  for (const project of sampleProjects) {
+    // Check if project already exists
+    const [existingProjects] = await db.execute('SELECT id FROM projects WHERE name = ?', [project.name]);
+    
+    if (existingProjects.length === 0) {
+      const [result] = await db.execute(
+        'INSERT INTO projects (name, description, owner_id) VALUES (?, ?, ?)',
+        [project.name, project.description, project.owner_id]
+      );
+      
+      const projectId = result.insertId;
+      console.log(`✅ Sample project created: ${project.name}`);
+      
+      // Add all users as members to each project
+      const [allUsers] = await db.execute('SELECT id FROM users WHERE id != ?', [johnId]);
+      
+      for (const user of allUsers) {
+        await db.execute(
+          'INSERT OR IGNORE INTO project_members (project_id, user_id, role, can_edit, can_delete) VALUES (?, ?, ?, ?, ?)',
+          [projectId, user.id, 'member', 1, 0]
+        );
+      }
+      console.log(`✅ All users added to project: ${project.name}`);
+    }
+  }
+};
+
 const initProductionDatabase = async () => {
   try {
     console.log('Initializing production database...');
     await initializeDatabase();
     await createTables();
     await createSampleUsers();
+    await createSampleProjects();
     console.log('✅ Production database initialized successfully');
   } catch (error) {
     console.error('❌ Failed to initialize production database:', error);

@@ -51,6 +51,20 @@ const register = async (req, res) => {
 
     const userId = result.insertId;
     
+    // Add user to all existing sample projects as member
+    const [projects] = await db.execute(
+      'SELECT id FROM projects WHERE name IN (?, ?, ?)',
+      ['Genel Görevler', 'Ekip Çalışmaları', 'Kişisel Gelişim']
+    );
+    
+    for (const project of projects) {
+      await db.execute(
+        'INSERT OR IGNORE INTO project_members (project_id, user_id, role, can_edit, can_delete) VALUES (?, ?, ?, ?, ?)',
+        [project.id, userId, 'member', 1, 0]
+      );
+    }
+    console.log(`✅ New user ${email} added to sample projects`);
+    
     // Generate token
     const token = generateToken(userId);
 
