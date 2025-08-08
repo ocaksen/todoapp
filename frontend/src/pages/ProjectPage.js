@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Plus, Users, Settings, Filter } from 'lucide-react';
+import { Plus, Users, Filter } from 'lucide-react';
 import { projectAPI, taskAPI } from '../services/api';
 import { joinProject, onTaskUpdated, onTaskCreated, onTaskDeleted, offTaskUpdated, offTaskCreated, offTaskDeleted } from '../services/socket';
 import toast from 'react-hot-toast';
@@ -251,7 +251,7 @@ const ProjectPage = () => {
       offTaskCreated(handleTaskCreate);
       offTaskDeleted(handleTaskDelete);
     };
-  }, [projectId]);
+  }, [projectId, loadProject, loadTasks]);
 
   useEffect(() => {
     const filtered = statusFilter === 'all' 

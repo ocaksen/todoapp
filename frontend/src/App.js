@@ -61,7 +61,7 @@ const AppLayout = ({ children }) => {
 
   useEffect(() => {
     if (isAuthenticated && token) {
-      const socket = initSocket(token);
+      initSocket(token);
       
       return () => {
         disconnectSocket();

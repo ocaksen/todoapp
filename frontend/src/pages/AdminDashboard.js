@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Settings, Activity, Shield, Eye, Trash2, UserX, KeyRound, MoreVertical } from 'lucide-react';
+import { Users, Settings, Activity, Shield, Eye, Trash2, UserX, KeyRound } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -32,7 +32,7 @@ const AdminDashboard = () => {
     
     console.log('Loading admin data for tab:', activeTab);
     loadData();
-  }, [activeTab, isAdmin]);
+  }, [activeTab, isAdmin, loadData]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -46,6 +46,8 @@ const AdminDashboard = () => {
           break;
         case 'logs':
           await loadTaskLogs();
+          break;
+        default:
           break;
       }
     } catch (error) {

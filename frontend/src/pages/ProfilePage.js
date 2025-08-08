@@ -23,7 +23,7 @@ const ProfilePage = () => {
       });
       loadStats();
     }
-  }, [user]);
+  }, [user, loadStats]);
 
   const loadStats = async () => {
     try {
