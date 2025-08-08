@@ -98,21 +98,28 @@ const createTables = async () => {
   console.log('✅ All tables created successfully');
 };
 
-const createAdminUser = async () => {
+const createSampleUsers = async () => {
   const db = getConnection();
   
-  // Check if admin user already exists
-  const [existingUsers] = await db.execute('SELECT id FROM users WHERE email = ?', ['admin@todoapp.com']);
+  const sampleUsers = [
+    { name: 'John Doe', email: 'john@example.com', password: 'password123', role: 'admin' },
+    { name: 'Jane Smith', email: 'jane@example.com', password: 'password123', role: 'user' },
+    { name: 'Bob Wilson', email: 'bob@example.com', password: 'password123', role: 'user' },
+    { name: 'Osman Admin', email: 'osman@admin.com', password: 'admin123456', role: 'super_admin' }
+  ];
   
-  if (existingUsers.length === 0) {
-    const hashedPassword = await bcrypt.hash('admin123', 12);
-    await db.execute(
-      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-      ['Admin User', 'admin@todoapp.com', hashedPassword, 'super_admin']
-    );
-    console.log('✅ Admin user created: admin@todoapp.com / admin123');
-  } else {
-    console.log('✅ Admin user already exists');
+  for (const user of sampleUsers) {
+    // Check if user already exists
+    const [existingUsers] = await db.execute('SELECT id FROM users WHERE email = ?', [user.email]);
+    
+    if (existingUsers.length === 0) {
+      const hashedPassword = await bcrypt.hash(user.password, 12);
+      await db.execute(
+        'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+        [user.name, user.email, hashedPassword, user.role]
+      );
+      console.log(`✅ Sample user created: ${user.email} / ${user.password} (${user.role})`);
+    }
   }
 };
 
@@ -121,7 +128,7 @@ const initProductionDatabase = async () => {
     console.log('Initializing production database...');
     await initializeDatabase();
     await createTables();
-    await createAdminUser();
+    await createSampleUsers();
     console.log('✅ Production database initialized successfully');
   } catch (error) {
     console.error('❌ Failed to initialize production database:', error);
