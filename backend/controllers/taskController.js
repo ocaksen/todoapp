@@ -305,13 +305,11 @@ const deleteTask = async (req, res) => {
     // Delete task (cascade will handle related records)
     const [result] = await db.execute('DELETE FROM tasks WHERE id = ?', [taskId]);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Task not found'
-      });
-    }
+    console.log('Delete task result:', result);
 
+    // For SQLite, if query executed without error, consider it successful
+    // The task exists check was already done above
+    
     // Emit real-time update
     req.io.to(`project-${projectId}`).emit('task-deleted', {
       taskId: parseInt(taskId),

@@ -83,9 +83,11 @@ export const adminAPI = {
   getAllTasks: (params) => api.get('/admin/tasks', { params }),
   getTaskLogs: (taskId) => api.get(taskId ? `/admin/tasks/${taskId}/logs` : '/admin/tasks/logs'),
   
-  // Project member management
-  addUserToProject: (projectId, data) => api.post(`/admin/projects/${projectId}/members`, data),
-  removeUserFromProject: (projectId, userId) => api.delete(`/admin/projects/${projectId}/members/${userId}`),
+  // Project management
+  getAllProjects: () => api.get('/admin/projects'),
+  getProjectMembers: (projectId) => api.get(`/admin/projects/${projectId}/members`),
+  addUserToProject: (projectId, data) => api.post(`/admin/projects/${projectId}/add-member`, data),
+  removeUserFromProject: (projectId, userId) => api.delete(`/admin/projects/${projectId}/remove-member/${userId}`),
 };
 
 export default api;

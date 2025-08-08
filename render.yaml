@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: todoapp-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run server:start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase:
+          name: todoapp-db
+          property: host
+      - key: DB_USER
+        fromDatabase:
+          name: todoapp-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: todoapp-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: todoapp-db
+          property: database
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 24h
+      - key: CORS_ORIGIN
+        value: https://todoapp-frontend.onrender.com
+
+  - type: web
+    name: todoapp-frontend
+    env: static
+    plan: free
+    buildCommand: npm run client:build
+    staticPublishPath: ./frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://todoapp-backend.onrender.com
+
+databases:
+  - name: todoapp-db
+    databaseName: todoapp
+    plan: free

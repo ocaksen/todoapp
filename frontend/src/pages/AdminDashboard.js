@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Settings, Activity, Shield, Eye, Trash2, UserX, KeyRound } from 'lucide-react';
+import { Users, Settings, Activity, Shield, Eye, Trash2, UserX, KeyRound, FolderOpen, UserPlus } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -12,6 +12,9 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [taskLogs, setTaskLogs] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projectMembers, setProjectMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -30,6 +33,9 @@ const AdminDashboard = () => {
       switch (activeTab) {
         case 'users':
           await loadUsers();
+          break;
+        case 'projects':
+          await loadProjects();
           break;
         case 'tasks':
           await loadTasks();
@@ -88,6 +94,29 @@ const AdminDashboard = () => {
     } catch (error) {
       toast.error('Failed to load task logs');
       console.error('Load task logs error:', error);
+    }
+  };
+
+  const loadProjects = async () => {
+    try {
+      console.log('Loading projects...');
+      const response = await adminAPI.getAllProjects();
+      console.log('Projects API response:', response.data);
+      setProjects(response.data.data.projects);
+    } catch (error) {
+      console.error('Load projects error:', error);
+      toast.error('Failed to load projects');
+    }
+  };
+
+  const loadProjectMembers = async (projectId) => {
+    try {
+      const response = await adminAPI.getProjectMembers(projectId);
+      setProjectMembers(response.data.data.members || []);
+      setSelectedProject(response.data.data.project);
+    } catch (error) {
+      console.error('Load project members error:', error);
+      toast.error('Failed to load project members');
     }
   };
 
@@ -207,6 +236,17 @@ const AdminDashboard = () => {
           >
             <Users className="inline h-4 w-4 mr-2" />
             Users
+          </button>
+          <button
+            onClick={() => setActiveTab('projects')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'projects'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <FolderOpen className="inline h-4 w-4 mr-2" />
+            Projects
           </button>
           <button
             onClick={() => setActiveTab('tasks')}
@@ -439,6 +479,94 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          {/* Projects Tab */}
+          {activeTab === 'projects' && (
+            <div>
+              {!selectedProject ? (
+                <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                  <div className="px-4 py-5 sm:px-6">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Project Management</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                      View all projects and manage their members
+                    </p>
+                  </div>
+                  <ul className="divide-y divide-gray-200">
+                    {projects.map((project) => (
+                      <li key={project.id} className="px-4 py-4 sm:px-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h4 className="text-lg font-medium text-gray-900">{project.name}</h4>
+                            {project.description && (
+                              <p className="text-sm text-gray-500 mt-1">{project.description}</p>
+                            )}
+                            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                              <span>Owner: {project.owner_name}</span>
+                              <span>•</span>
+                              <span>{project.member_count || 0} members</span>
+                              <span>•</span>
+                              <span>{project.task_count || 0} tasks</span>
+                              <span>•</span>
+                              <span>Created {format(new Date(project.created_at), 'MMM d, yyyy')}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => loadProjectMembers(project.id)}
+                              className="btn-primary text-xs"
+                            >
+                              <UserPlus size={14} className="mr-1" />
+                              Manage Members
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                    {projects.length === 0 && (
+                      <li className="px-4 py-8">
+                        <div className="text-center text-gray-500">
+                          No projects found
+                        </div>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              ) : (
+                <ProjectMembersManager
+                  project={selectedProject}
+                  members={projectMembers}
+                  users={users}
+                  onBack={() => {
+                    setSelectedProject(null);
+                    setProjectMembers([]);
+                  }}
+                  onAddMember={async (userId, role) => {
+                    try {
+                      await adminAPI.addUserToProject(selectedProject.id, {
+                        userId: parseInt(userId),
+                        role,
+                        can_edit: role !== 'viewer',
+                        can_delete: role === 'admin'
+                      });
+                      toast.success('Member added successfully');
+                      await loadProjectMembers(selectedProject.id);
+                    } catch (error) {
+                      toast.error(error.response?.data?.message || 'Failed to add member');
+                    }
+                  }}
+                  onRemoveMember={async (userId) => {
+                    try {
+                      await adminAPI.removeUserFromProject(selectedProject.id, userId);
+                      toast.success('Member removed successfully');
+                      await loadProjectMembers(selectedProject.id);
+                    } catch (error) {
+                      toast.error(error.response?.data?.message || 'Failed to remove member');
+                    }
+                  }}
+                />
+              )}
+            </div>
+          )}
+
           {/* System Settings Tab - Super Admin Only */}
           {activeTab === 'settings' && isSuperAdmin && (
             <div className="bg-white shadow sm:rounded-lg">
@@ -469,6 +597,165 @@ const AdminDashboard = () => {
           onSubmit={handlePasswordReset}
           onClose={() => setShowModal(false)}
         />
+      )}
+    </div>
+  );
+};
+
+const ProjectMembersManager = ({ project, members, users, onBack, onAddMember, onRemoveMember }) => {
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedRole, setSelectedRole] = useState('member');
+
+  const availableUsers = users.filter(user => 
+    user.id !== project.owner_id && 
+    !members.some(member => member.user_id === user.id)
+  );
+
+  const handleAddMember = (e) => {
+    e.preventDefault();
+    if (!selectedUserId) return;
+    
+    onAddMember(selectedUserId, selectedRole);
+    setSelectedUserId('');
+    setSelectedRole('member');
+    setShowAddModal(false);
+  };
+
+  return (
+    <div className="bg-white shadow sm:rounded-lg">
+      <div className="px-4 py-5 sm:px-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              {project.name} - Members
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Manage project members and their roles
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="btn-primary"
+              disabled={availableUsers.length === 0}
+            >
+              <UserPlus size={16} className="mr-2" />
+              Add Member
+            </button>
+            <button onClick={onBack} className="btn-secondary">
+              Back to Projects
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200">
+        {/* Project Owner */}
+        <div className="px-4 py-4 bg-blue-50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium text-gray-900">{project.owner_name}</h4>
+              <p className="text-sm text-gray-600">{project.owner_email}</p>
+            </div>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              Project Owner
+            </span>
+          </div>
+        </div>
+
+        {/* Members */}
+        {members.length > 0 ? (
+          members.map((member) => (
+            <div key={member.user_id} className="px-4 py-4 border-b border-gray-200 last:border-b-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-gray-900">{member.name}</h4>
+                  <p className="text-sm text-gray-600">{member.email}</p>
+                  <div className="flex items-center space-x-3 mt-1">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Can edit: {member.can_edit ? 'Yes' : 'No'}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Can delete: {member.can_delete ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onRemoveMember(member.user_id)}
+                  className="text-red-600 hover:text-red-800 text-sm"
+                >
+                  <UserX size={16} />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="px-4 py-8 text-center text-gray-500">
+            No additional members in this project
+          </div>
+        )}
+      </div>
+
+      {/* Add Member Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div className="fixed inset-0 bg-black opacity-50" onClick={() => setShowAddModal(false)}></div>
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md relative">
+              <h3 className="text-lg font-semibold mb-4">Add Member to {project.name}</h3>
+              <form onSubmit={handleAddMember} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select User
+                  </label>
+                  <select
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="input"
+                    required
+                  >
+                    <option value="">Select a user...</option>
+                    {availableUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name} ({user.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Role
+                  </label>
+                  <select
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    className="input"
+                  >
+                    <option value="viewer">Viewer (Read only)</option>
+                    <option value="member">Member (Edit tasks)</option>
+                    <option value="admin">Admin (Full access)</option>
+                  </select>
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowAddModal(false)} 
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary">
+                    Add Member
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

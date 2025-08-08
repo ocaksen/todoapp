@@ -91,6 +91,7 @@ const login = async (req, res) => {
     }
 
     const { email, password } = req.body;
+    console.log('Login attempt for email:', email);
     const db = getConnection();
 
     // Find user
@@ -98,6 +99,8 @@ const login = async (req, res) => {
       'SELECT id, email, password, name, role FROM users WHERE email = ?',
       [email]
     );
+
+    console.log('Found users:', users.length);
 
     if (users.length === 0) {
       return res.status(401).json({

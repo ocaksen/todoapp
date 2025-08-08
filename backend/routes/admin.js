@@ -9,7 +9,11 @@ const {
   removeUserFromProject,
   resetUserPassword,
   toggleUserStatus,
-  deleteUser
+  deleteUser,
+  getAllProjects,
+  getProjectMembers,
+  adminAddUserToProject,
+  adminRemoveUserFromProject
 } = require('../controllers/adminController');
 const { authenticateToken, authorize } = require('../middleware/auth');
 
@@ -122,6 +126,36 @@ router.delete('/users/:userId',
   authorize('super_admin'),
   param('userId').isInt({ min: 1 }),
   deleteUser
+);
+
+// Project management routes
+router.get('/projects', 
+  authenticateToken, 
+  authorize('admin', 'super_admin'), 
+  getAllProjects
+);
+
+router.get('/projects/:projectId/members', 
+  authenticateToken, 
+  authorize('admin', 'super_admin'),
+  param('projectId').isInt({ min: 1 }),
+  getProjectMembers
+);
+
+router.post('/projects/:projectId/add-member', 
+  authenticateToken, 
+  authorize('admin', 'super_admin'),
+  param('projectId').isInt({ min: 1 }),
+  body('userId').isInt({ min: 1 }),
+  adminAddUserToProject
+);
+
+router.delete('/projects/:projectId/remove-member/:userId', 
+  authenticateToken, 
+  authorize('admin', 'super_admin'),
+  param('projectId').isInt({ min: 1 }),
+  param('userId').isInt({ min: 1 }),
+  adminRemoveUserFromProject
 );
 
 module.exports = router;

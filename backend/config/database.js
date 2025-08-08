@@ -42,14 +42,25 @@ const getConnection = () => {
     get: promisify(db.get.bind(db)),
     all: promisify(db.all.bind(db)),
     close: promisify(db.close.bind(db)),
-    // For compatibility with existing code
+    // For compatibility with existing code that expects MySQL-style results
     execute: async (query, params = []) => {
-      if (query.trim().toUpperCase().startsWith('SELECT')) {
-        const rows = await promisify(db.all.bind(db))(query, params);
-        return [rows];
-      } else {
-        const result = await promisify(db.run.bind(db))(query, params);
-        return [{ insertId: result ? result.lastID : null, affectedRows: result ? result.changes : 0 }];
+      try {
+        if (query.trim().toUpperCase().startsWith('SELECT')) {
+          const rows = await promisify(db.all.bind(db))(query, params);
+          return [rows, null]; // MySQL-style: [rows, fields]
+        } else {
+          const result = await promisify(db.run.bind(db))(query, params);
+          console.log('SQLite run result:', result);
+          // SQLite returns changes property correctly
+          const affectedRows = result && typeof result.changes === 'number' ? result.changes : 0;
+          return [{ 
+            insertId: result ? result.lastID : null, 
+            affectedRows: affectedRows
+          }, null];
+        }
+      } catch (error) {
+        console.error('Database execute error:', error);
+        throw error;
       }
     }
   };

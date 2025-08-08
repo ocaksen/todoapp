@@ -9,13 +9,14 @@
     "client:dev": "cd frontend && npm start",
     "server:start": "cd backend && npm start",
     "client:build": "cd frontend && npm run build",
-    "build": "cd frontend && npm install && npm run build",
+    "build": "npm install && cd frontend && npm install && npm run build",
     "start": "cd backend && npm start",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../cli && npm install",
     "setup:db": "cd backend && npm run db:setup",
     "setup:admin": "cd backend && node scripts/admin-migration.js",
     "cli": "cd cli && node index.js",
-    "heroku-postbuild": "cd frontend && npm install && npm run build"
+    "heroku-postbuild": "cd frontend && npm install && npm run build",
+    "render-postbuild": "npm run build"
   },
   "keywords": ["todo", "fullstack", "react", "express", "jwt"],
   "author": "",

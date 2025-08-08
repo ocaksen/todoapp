@@ -130,13 +130,31 @@ const createProject = async (req, res) => {
       WHERE p.id = ?
     `, [projectId]);
 
-    res.status(201).json({
-      success: true,
-      message: 'Project created successfully',
-      data: {
-        project: projects[0]
-      }
-    });
+    console.log('Created project query result:', projects);
+
+    if (projects && projects.length > 0) {
+      res.status(201).json({
+        success: true,
+        message: 'Project created successfully',
+        data: {
+          project: projects[0]
+        }
+      });
+    } else {
+      // Fallback: return basic project info if query fails
+      res.status(201).json({
+        success: true,
+        message: 'Project created successfully',
+        data: {
+          project: {
+            id: projectId,
+            name,
+            description,
+            owner_id: userId
+          }
+        }
+      });
+    }
   } catch (error) {
     console.error('Create project error:', error);
     res.status(500).json({

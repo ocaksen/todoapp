@@ -21,7 +21,13 @@
       "Bash(git config:*)",
       "Bash(git branch:*)",
       "Bash(git remote add:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ngrok:*)",
+      "Bash(ssh:*)",
+      "Bash(npx localtunnel:*)",
+      "Bash(curl:*)",
+      "Bash(PORT=5001 node server.js)",
+      "Bash(\"taskkill\" \"/F\" \"/IM\" \"node.exe\")"
     ],
     "deny": []
   }

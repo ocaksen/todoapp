@@ -9,8 +9,8 @@ const getAllUsers = async (req, res) => {
     
     const [users] = await db.execute(`
       SELECT 
-        id, name, email, role, created_at, last_login,
-        CASE WHEN is_active = 1 THEN 'Active' ELSE 'Inactive' END as status
+        id, name, email, role, created_at,
+        'Active' as status
       FROM users 
       ORDER BY created_at DESC
     `);
@@ -374,6 +374,176 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Get all projects (Admin & Super Admin)
+const getAllProjects = async (req, res) => {
+  try {
+    const db = getConnection();
+    
+    const [projects] = await db.execute(`
+      SELECT 
+        p.*,
+        u.name as owner_name,
+        u.email as owner_email,
+        COUNT(DISTINCT pm.user_id) as member_count,
+        COUNT(DISTINCT t.id) as task_count
+      FROM projects p
+      LEFT JOIN users u ON p.owner_id = u.id
+      LEFT JOIN project_members pm ON p.id = pm.project_id
+      LEFT JOIN tasks t ON p.id = t.project_id
+      GROUP BY p.id
+      ORDER BY p.created_at DESC
+    `);
+
+    res.json({
+      success: true,
+      data: { projects }
+    });
+  } catch (error) {
+    console.error('Get all projects error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get projects',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// Get project members (Admin & Super Admin)
+const getProjectMembers = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const db = getConnection();
+    
+    const [members] = await db.execute(`
+      SELECT 
+        pm.*,
+        u.name,
+        u.email,
+        u.role as user_role
+      FROM project_members pm
+      JOIN users u ON pm.user_id = u.id
+      WHERE pm.project_id = ?
+      ORDER BY pm.created_at ASC
+    `, [projectId]);
+
+    // Get project owner
+    const [project] = await db.execute(`
+      SELECT 
+        p.*,
+        owner.name as owner_name,
+        owner.email as owner_email
+      FROM projects p
+      JOIN users owner ON p.owner_id = owner.id
+      WHERE p.id = ?
+    `, [projectId]);
+
+    res.json({
+      success: true,
+      data: {
+        project: project[0] || null,
+        members
+      }
+    });
+  } catch (error) {
+    console.error('Get project members error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get project members',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// Admin add member to project
+const adminAddUserToProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { userId, role = 'member', can_edit = true, can_delete = false } = req.body;
+    const db = getConnection();
+
+    // Check if user exists
+    const [users] = await db.execute('SELECT id, name, email FROM users WHERE id = ?', [userId]);
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Check if project exists
+    const [projects] = await db.execute('SELECT id FROM projects WHERE id = ?', [projectId]);
+    if (projects.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Check if user is already a member
+    const [existingMembers] = await db.execute(
+      'SELECT id FROM project_members WHERE project_id = ? AND user_id = ?',
+      [projectId, userId]
+    );
+
+    if (existingMembers.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'User is already a member of this project'
+      });
+    }
+
+    // Add member
+    await db.execute(
+      'INSERT INTO project_members (project_id, user_id, role, can_edit, can_delete) VALUES (?, ?, ?, ?, ?)',
+      [projectId, userId, role, can_edit, can_delete]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'User added to project successfully'
+    });
+  } catch (error) {
+    console.error('Admin add user to project error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to add user to project',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// Admin remove member from project
+const adminRemoveUserFromProject = async (req, res) => {
+  try {
+    const { projectId, userId } = req.params;
+    const db = getConnection();
+
+    const result = await db.execute(
+      'DELETE FROM project_members WHERE project_id = ? AND user_id = ?',
+      [projectId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Member not found in this project'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User removed from project successfully'
+    });
+  } catch (error) {
+    console.error('Admin remove user from project error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove user from project',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   updateUserRole,
@@ -383,5 +553,9 @@ module.exports = {
   removeUserFromProject,
   resetUserPassword,
   toggleUserStatus,
-  deleteUser
+  deleteUser,
+  getAllProjects,
+  getProjectMembers,
+  adminAddUserToProject,
+  adminRemoveUserFromProject
 };

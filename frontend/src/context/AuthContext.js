@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import axios from 'axios';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -14,7 +14,6 @@ const authReducer = (state, action) => {
   switch (action.type) {
     case 'LOGIN_SUCCESS':
       localStorage.setItem('token', action.payload.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
       return {
         ...state,
         user: action.payload.user,
@@ -24,7 +23,6 @@ const authReducer = (state, action) => {
       };
     case 'LOGOUT':
       localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
       return {
         ...state,
         user: null,
@@ -55,8 +53,7 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          const response = await axios.get('/api/auth/profile');
+          const response = await authAPI.getProfile();
           dispatch({
             type: 'LOGIN_SUCCESS',
             payload: {
@@ -79,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const response = await axios.post('/api/auth/login', { email, password });
+      const response = await authAPI.login({ email, password });
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: response.data.data,
@@ -97,7 +94,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const response = await axios.post('/api/auth/register', { name, email, password });
+      const response = await authAPI.register({ name, email, password });
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: response.data.data,
@@ -118,7 +115,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     try {
-      const response = await axios.put('/api/auth/profile', profileData);
+      const response = await authAPI.updateProfile(profileData);
       dispatch({
         type: 'UPDATE_USER',
         payload: response.data.data.user,
