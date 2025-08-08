@@ -9,7 +9,7 @@
     "client:dev": "cd frontend && npm start",
     "server:start": "cd backend && npm start",
     "client:build": "cd frontend && npm run build",
-    "build": "npm run client:build",
+    "build": "cd frontend && npm run build",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../cli && npm install",
     "setup:db": "cd backend && npm run db:setup",
     "setup:admin": "cd backend && node scripts/admin-migration.js",
