@@ -83,14 +83,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Serve static files from frontend build
-const path = require('path');
-app.use(express.static(path.join(__dirname, '../frontend/build')));
-
-// Serve React app for all non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
-});
+// API-only backend - frontend will be deployed separately
 
 // Error handling middleware
 app.use((err, req, res, next) => {
