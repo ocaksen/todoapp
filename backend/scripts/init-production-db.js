@@ -1,4 +1,5 @@
 const { initializeDatabase, getConnection } = require('../config/database');
+const { addAvatarField } = require('./add-avatar-field');
 const bcrypt = require('bcryptjs');
 
 const createTables = async () => {
@@ -12,6 +13,7 @@ const createTables = async () => {
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin', 'super_admin')),
+      avatar_url TEXT,
       is_active INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       last_login DATETIME
@@ -170,6 +172,7 @@ const initProductionDatabase = async () => {
     console.log('Initializing production database...');
     await initializeDatabase();
     await createTables();
+    await addAvatarField();
     await createSampleUsers();
     await createSampleProjects();
     console.log('✅ Production database initialized successfully');
