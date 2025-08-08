@@ -77,10 +77,26 @@ app.use('/api/admin', adminRoutes);
 
 console.log('✅ Admin routes registered at /api/admin');
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+// Serve static files from frontend build
+if (process.env.NODE_ENV === 'production') {
+  const path = require('path');
+  app.use(express.static(path.join(__dirname, '../frontend/build')));
+  
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({
+        success: false,
+        message: 'API endpoint not found'
+      });
+    }
+    res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+  });
+} else {
+  // Health check
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -92,13 +108,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'API endpoint not found'
-  });
-});
+// This is now handled above in the production static serving
 
 // Initialize database before starting server
 const startServer = async () => {
