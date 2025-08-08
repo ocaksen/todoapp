@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(npm install)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(rm:*)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell:*)",
+      "Bash(wmic:*)",
+      "Bash(sqlite3:*)",
+      "Bash(npm start)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(cmd /c:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

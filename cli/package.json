@@ -1,0 +1,16 @@
+{
+  "name": "todoapp-cli",
+  "version": "1.0.0",
+  "description": "CLI tool for daily task summary",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.6",
+    "table": "^6.8.1"
+  }
+}
