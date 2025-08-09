@@ -39,11 +39,7 @@ const updateProfileValidation = [
   body('name')
     .trim()
     .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters'),
-  body('avatar_url')
-    .optional()
-    .isURL()
-    .withMessage('Avatar URL must be a valid URL')
+    .withMessage('Name must be between 2 and 50 characters')
 ];
 
 // Routes

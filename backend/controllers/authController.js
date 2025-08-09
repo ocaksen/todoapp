@@ -164,7 +164,7 @@ const getProfile = async (req, res) => {
     const db = getConnection();
 
     const [users] = await db.execute(
-      'SELECT id, email, name, role, avatar_url, created_at FROM users WHERE id = ?',
+      'SELECT id, email, name, role, created_at FROM users WHERE id = ?',
       [userId]
     );
 
@@ -203,17 +203,17 @@ const updateProfile = async (req, res) => {
     }
 
     const userId = req.user.id;
-    const { name, avatar_url } = req.body;
+    const { name } = req.body;
     const db = getConnection();
 
     await db.execute(
-      'UPDATE users SET name = ?, avatar_url = ? WHERE id = ?',
-      [name, avatar_url, userId]
+      'UPDATE users SET name = ? WHERE id = ?',
+      [name, userId]
     );
 
     // Get updated user data
     const [users] = await db.execute(
-      'SELECT id, email, name, role, avatar_url, created_at FROM users WHERE id = ?',
+      'SELECT id, email, name, role, created_at FROM users WHERE id = ?',
       [userId]
     );
 
