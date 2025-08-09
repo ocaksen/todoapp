@@ -103,16 +103,18 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   try {
     if (process.env.NODE_ENV === 'production') {
-      // Only initialize if database doesn't exist or is empty
+      // First initialize database connection
+      await require('./config/database').initializeDatabase();
+      
+      // Then check if tables exist
       const db = require('./config/database').getConnection();
       const [tables] = await db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
       
       if (tables.length === 0) {
-        console.log('🔄 First time setup - initializing database...');
-        await initProductionDatabase();
+        console.log('🔄 First time setup - creating tables and sample data...');
+        await require('./scripts/init-production-db').initProductionDatabase();
       } else {
-        console.log('✅ Database already exists - skipping initialization');
-        await require('./config/database').initializeDatabase(); // Just connect
+        console.log('✅ Database already exists - skipping table creation');
       }
     } else {
       await initializeDatabase();
