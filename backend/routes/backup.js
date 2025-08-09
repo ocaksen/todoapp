@@ -1,39 +1,88 @@
 const express = require('express');
 const { getConnection } = require('../config/database');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const backupService = require('../services/backupService');
 
 const router = express.Router();
 
-// Database backup endpoint (only for super_admin)
-router.get('/database', authenticateToken, requireRole('super_admin'), async (req, res) => {
+// Manual backup endpoint (only for super_admin)
+router.post('/create', authenticateToken, requireRole('super_admin'), async (req, res) => {
   try {
-    const db = getConnection();
+    const { type = 'manual' } = req.body;
+    const result = await backupService.createBackup(type);
     
-    // Get all data from important tables
-    const backup = {};
-    
-    const [users] = await db.execute('SELECT * FROM users');
-    const [projects] = await db.execute('SELECT * FROM projects');
-    const [tasks] = await db.execute('SELECT * FROM tasks');
-    const [projectMembers] = await db.execute('SELECT * FROM project_members');
-    
-    backup.users = users;
-    backup.projects = projects;
-    backup.tasks = tasks;
-    backup.project_members = projectMembers;
-    backup.timestamp = new Date().toISOString();
-    
-    res.json({
-      success: true,
-      message: 'Database backup created',
-      data: backup
-    });
+    if (result.success) {
+      res.json({
+        success: true,
+        message: `${type.toUpperCase()} backup created successfully`,
+        data: {
+          filename: result.filename,
+          size: result.size
+        }
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to create backup',
+        error: result.error
+      });
+    }
     
   } catch (error) {
     console.error('Backup error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create backup'
+    });
+  }
+});
+
+// List all backups
+router.get('/list', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const backups = await backupService.getBackupList();
+    
+    res.json({
+      success: true,
+      data: {
+        backups: backups,
+        count: backups.length
+      }
+    });
+    
+  } catch (error) {
+    console.error('List backups error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to list backups'
+    });
+  }
+});
+
+// Restore backup endpoint (only for super_admin)
+router.post('/restore/:filename', authenticateToken, requireRole('super_admin'), async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const result = await backupService.restoreBackup(filename);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Backup restored successfully'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to restore backup',
+        error: result.error
+      });
+    }
+    
+  } catch (error) {
+    console.error('Restore error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to restore backup'
     });
   }
 });
