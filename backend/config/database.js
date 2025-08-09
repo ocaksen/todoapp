@@ -3,9 +3,9 @@ const path = require('path');
 const { promisify } = require('util');
 require('dotenv').config();
 
-// Render free plan için /tmp kullan (her deploy silinir ama çalışır)
+// Render paid plan - persistent storage path
 const dbPath = process.env.NODE_ENV === 'production' 
-  ? '/tmp/database.sqlite' 
+  ? process.env.DATABASE_PATH || '/opt/render/project/src/database.sqlite'
   : path.join(__dirname, '..', 'database.sqlite');
 let db;
 

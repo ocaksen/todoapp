@@ -6,7 +6,7 @@ const { getConnection } = require('../config/database');
 class BackupService {
   constructor() {
     this.backupDir = process.env.NODE_ENV === 'production' 
-      ? '/opt/render/project/src/backups' 
+      ? process.env.BACKUP_PATH || '/opt/render/project/src/backups'
       : path.join(__dirname, '..', 'backups');
     
     // Delay initialization to ensure database is ready
