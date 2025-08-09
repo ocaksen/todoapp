@@ -118,8 +118,14 @@ const checkProjectPermission = async (req, res, next) => {
   }
 };
 
+// Convenience function for single role requirement
+const requireRole = (role) => {
+  return authorize(role);
+};
+
 module.exports = {
   authenticateToken,
   authorize,
+  requireRole,
   checkProjectPermission
 };
