@@ -92,7 +92,6 @@ const getTaskById = async (req, res) => {
       SELECT 
         c.*,
         u.name as user_name,
-        u.avatar_url
       FROM comments c
       JOIN users u ON c.user_id = u.id
       WHERE c.task_id = ?
@@ -366,7 +365,6 @@ const addComment = async (req, res) => {
       SELECT 
         c.*,
         u.name as user_name,
-        u.avatar_url
       FROM comments c
       JOIN users u ON c.user_id = u.id
       WHERE c.id = ?
