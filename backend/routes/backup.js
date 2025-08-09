@@ -38,7 +38,12 @@ router.post('/create', authenticateToken, requireRole('super_admin'), async (req
 });
 
 // List all backups
-router.get('/list', authenticateToken, requireRole('admin'), async (req, res) => {
+router.get('/list', authenticateToken, (req, res, next) => {
+  if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+    return next();
+  }
+  return res.status(403).json({ success: false, message: 'Access denied' });
+}, async (req, res) => {
   try {
     const backups = await backupService.getBackupList();
     
@@ -88,7 +93,12 @@ router.post('/restore/:filename', authenticateToken, requireRole('super_admin'),
 });
 
 // Database stats endpoint
-router.get('/stats', authenticateToken, requireRole('admin'), async (req, res) => {
+router.get('/stats', authenticateToken, (req, res, next) => {
+  if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+    return next();
+  }
+  return res.status(403).json({ success: false, message: 'Access denied' });
+}, async (req, res) => {
   try {
     const db = getConnection();
     
