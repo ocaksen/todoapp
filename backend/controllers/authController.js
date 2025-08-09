@@ -49,7 +49,9 @@ const register = async (req, res) => {
       [email, hashedPassword, name]
     );
 
+    console.log('Registration result:', result);
     const userId = result.insertId;
+    console.log('Generated userId:', userId);
     
     // Add user to all existing sample projects as member
     const [projects] = await db.execute(
