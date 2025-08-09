@@ -77,7 +77,7 @@ const getProjectById = async (req, res) => {
       FROM project_members pm
       JOIN users u ON pm.user_id = u.id
       WHERE pm.project_id = ?
-      ORDER BY pm.created_at ASC
+      ORDER BY pm.joined_at ASC
     `, [projectId]);
 
     res.json({
