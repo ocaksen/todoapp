@@ -122,8 +122,8 @@ const startServer = async () => {
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
       
-      // Initialize backup service after database is ready
-      if (process.env.NODE_ENV === 'production') {
+      // Skip backup service on free hosting plans
+      if (process.env.NODE_ENV === 'production' && process.env.ENABLE_BACKUPS === 'true') {
         console.log('🔄 Initializing automated backup system...');
         require('./services/backupService');
       }
