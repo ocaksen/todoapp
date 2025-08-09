@@ -9,8 +9,11 @@ class BackupService {
       ? '/opt/render/project/src/backups' 
       : path.join(__dirname, '..', 'backups');
     
-    this.initBackupDirectory();
-    this.startScheduledBackups();
+    // Delay initialization to ensure database is ready
+    setTimeout(() => {
+      this.initBackupDirectory();
+      this.startScheduledBackups();
+    }, 1000);
   }
 
   async initBackupDirectory() {

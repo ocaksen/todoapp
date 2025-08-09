@@ -9,7 +9,6 @@ require('dotenv').config();
 
 const { initializeDatabase } = require('./config/database');
 const { initProductionDatabase } = require('./scripts/init-production-db');
-const backupService = require('./services/backupService');
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
 const userRoutes = require('./routes/users');
@@ -121,10 +120,10 @@ const startServer = async () => {
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
       
-      // Initialize backup service after server starts
+      // Initialize backup service after database is ready
       if (process.env.NODE_ENV === 'production') {
         console.log('🔄 Initializing automated backup system...');
-        // backupService is already initialized when imported
+        require('./services/backupService');
       }
     });
   } catch (error) {
