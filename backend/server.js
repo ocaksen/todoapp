@@ -14,6 +14,7 @@ const taskRoutes = require('./routes/tasks');
 const userRoutes = require('./routes/users');
 const projectRoutes = require('./routes/projects');
 const adminRoutes = require('./routes/admin');
+const backupRoutes = require('./routes/backup');
 
 const app = express();
 const server = createServer(app);
@@ -75,6 +76,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/backup', backupRoutes);
 
 console.log('✅ Admin routes registered at /api/admin');
 
@@ -101,7 +103,17 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   try {
     if (process.env.NODE_ENV === 'production') {
-      await initProductionDatabase();
+      // Only initialize if database doesn't exist or is empty
+      const db = require('./config/database').getConnection();
+      const [tables] = await db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
+      
+      if (tables.length === 0) {
+        console.log('🔄 First time setup - initializing database...');
+        await initProductionDatabase();
+      } else {
+        console.log('✅ Database already exists - skipping initialization');
+        await require('./config/database').initializeDatabase(); // Just connect
+      }
     } else {
       await initializeDatabase();
     }

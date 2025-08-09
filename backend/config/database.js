@@ -3,9 +3,9 @@ const path = require('path');
 const { promisify } = require('util');
 require('dotenv').config();
 
-// Vercel için production ortamında /tmp dizinini kullan
+// Render için production ortamında /opt/render/project/src dizinini kullan
 const dbPath = process.env.NODE_ENV === 'production' 
-  ? '/tmp/database.sqlite' 
+  ? '/opt/render/project/src/database.sqlite' 
   : path.join(__dirname, '..', 'database.sqlite');
 let db;
 
