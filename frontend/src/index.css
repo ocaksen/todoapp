@@ -9,14 +9,33 @@
 
   html, body {
     @apply h-full;
+    overflow-x: hidden; /* Horizontal scroll'u engelle */
+    -webkit-overflow-scrolling: touch; /* iOS smooth scroll */
   }
 
   #root {
     @apply h-full;
+    min-height: 100vh;
+    position: relative;
   }
 
   body {
     @apply font-sans antialiased bg-gray-50 text-gray-900;
+    touch-action: manipulation; /* Mobile touch optimization */
+    -webkit-text-size-adjust: 100%; /* iOS text scaling fix */
+  }
+
+  /* Mobile scroll fixes */
+  @media (max-width: 768px) {
+    html, body {
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
   }
 }
 
